@@ -52,13 +52,15 @@ Una petición a `GET /api/v1/recetas` sin sesión no incluye la cabecera `Author
 
 En la consola del navegador se observó: `Failed to load resource: the server responded with a status of 403 ()`. En Network, la solicitud corresponde a `GET http://localhost:8080/api/v1/recetas` y no contiene `Authorization`.
 
-El `authInterceptor` se registra en `app.config.ts` mediante `provideHttpClient(withInterceptors([authInterceptor]))`. Antes de enviar cada petición, obtiene el token desde `AuthService` y clona la solicitud con:
+La reproducción solicitada se realizó retirando temporalmente el registro de `authInterceptor` en `app.config.ts`. Después de iniciar sesión y entrar a `/recetas`, la petición se envió sin la cabecera `Authorization` y el backend protegido la rechazó con `403 Forbidden`. La captura de esta reproducción se encuentra en `docs/error_jwt_401.png`. El interceptor ya fue restaurado para que el proyecto funcione normalmente.
+
+En la configuración funcional, el `authInterceptor` se registra mediante `provideHttpClient(withInterceptors([authInterceptor]))`. Antes de enviar cada petición, obtiene el token desde `AuthService` y clona la solicitud con:
 
 ```http
 Authorization: Bearer <jwt>
 ```
 
-El filtro `AuthTokenFilter` valida firma y expiración, recupera el usuario y establece el contexto de seguridad. Para reproducir el error solicitado, se puede retirar temporalmente el interceptor, iniciar sesión, visitar el tablero y observar el `401` en Network; luego se restaura el registro del interceptor. La captura visual debe guardarse como `docs/error_jwt_401.png` después de ejecutar esa reproducción en el navegador.
+El filtro `AuthTokenFilter` valida firma y expiración, recupera el usuario y establece el contexto de seguridad. Actualmente `app.config.ts` importa `authInterceptor` y usa `provideHttpClient(withInterceptors([authInterceptor]))`; así las peticiones protegidas incluyen el JWT y dejan de ser rechazadas.
 
 ## Validación ejecutada
 
